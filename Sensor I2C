@@ -1,0 +1,33 @@
+#include <Wire.h>
+#include <Adafruit_BMP085.h>
+#include <SPI.h>
+
+#define SDA_PIN 21
+#define SCL_PIN 22
+
+Adafruit_BMP085 sense;
+
+float temp = 0;
+
+void setup(){
+
+  Wire.begin(SDA_PIN, SCL_PIN);
+
+  if (!sense.begin()) {
+	Serial.println("Could not find a valid BMP085 sensor, check wiring!");
+  while (1) {}
+}
+
+void loop(){
+ if (Serial2.available() > 0) {
+    char dato = Serial2.read();
+    if (dato == 'T') {
+      temp = sense.readTemperature();
+      Serial.print("Temperatura: ");
+      Serial.print(temp);
+      Serial.println(" °C");
+
+      char tempStr[8];
+      dtostrf(temp, 4, 2, tempStr);
+      Serial2.print(tempStr);
+}
