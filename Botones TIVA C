@@ -1,0 +1,25 @@
+#define tomarMed PF_4
+#define Guardar PF_0
+
+int med = 0;
+int lastmed = 0;
+int save = 0;
+int lastsave = 0;
+
+void setup() {
+  pinMode(tomarMed, INPUT_PULLUP);
+  pinMode(Guardar, INPUT_PULLUP);
+  
+}
+
+void loop() {
+  med = digitalRead(tomarMed);
+  save = digitalRead(Guardar);
+
+  if (med == LOW && lastmed == HIGH) {
+    Serial2.print("T");
+  }
+
+  if (save == LOW && lastsave == HIGH) {
+    Serial2.print("D");
+  }
