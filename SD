@@ -1,0 +1,49 @@
+#include <SD.h>
+#include <SPI.h>
+
+#define SD_CS PE_2
+
+void setup() {
+  pinMode(SD_CS, OUTPUT);
+  
+  Serial2.begin(115200);
+
+  Serial.print("Initializing SD card...");
+
+  if (!SD.begin(SD_CS)) {
+  Serial.println("initialization failed!");
+    return;
+  }
+  Serial.println("initialization done.");  
+}
+
+void loop() {
+
+  if (Serial2.available() > 0) {
+    tempStr = Serial2.readStringUntil('/n');
+    }
+
+  if (save == LOW && lastsave == HIGH) {
+    Serial2.print("D");
+    LCD_Clear(0x00);
+    archivo = SD.open("test.txt", FILE_WRITE);
+    
+    if (archivo) {
+    Serial.print("Writing to test.txt...");
+    archivo.println(tempStr);
+    archivo.close();
+    Serial.println("done.");
+    String text4 = "Medicion guardada";
+    LCD_Print(text4, 10, 60, 2, 0xffff, 0x00);
+
+    String text5 = "exitosamente! ";
+    LCD_Print(text5, 10, 100, 2, 0xffff, 0x00);
+    delay(1250);
+    LCD_Clear(0x00);
+
+
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+ }
