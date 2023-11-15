@@ -1,0 +1,159 @@
+// Cristian David Alonzo Martínez //
+// Proyecto 3 - Electrónica Digital //
+// I2C y Neopixel //
+
+#include <Arduino.h> // Se incluye la librería para usar las funciones propias de Arduino
+#include <Adafruit_NeoPixel.h>
+#include <Wire.h>
+#include <Adafruit_BMP085.h>
+#include <SPI.h>
+
+
+#define SDA_PIN 21
+#define SCL_PIN 22
+#define Neo  23
+#define NUMPIXELS  16
+
+Adafruit_NeoPixel pixels(NUMPIXELS, Neo, NEO_GRB);
+Adafruit_BMP085 sense;
+
+// Creación de variables globales para funciones y ejecución del código
+float temp = 0;
+
+void Strobe(byte red, byte green, byte blue, int StrobeCount, int FlashDelay, int EndPause);
+void showStrip();
+void colorWipe(byte red, byte green, byte blue, int SpeedDelay);
+void colorWipeReverse(byte red, byte green, byte blue, int SpeedDelay);
+void setPixel(int Pixel, byte red, byte green, byte blue);
+void setAll(byte red, byte green, byte blue);
+
+
+void setup(){
+  Serial.begin(115200); // Se inicia la comunicación serial para desplegar valores
+  Serial2.begin(115200); // Se inicia la comunicación serial para desplegar valores
+
+  pixels.begin(); 
+  pixels.clear();
+  pixels.setBrightness(255);
+
+  Wire.begin(SDA_PIN, SCL_PIN);
+
+
+  if (!sense.begin()) {
+	Serial.println("Could not find a valid BMP085 sensor, check wiring!");
+  Strobe(173, 216, 230, 3, 200, 500);
+  
+  setAll(255, 0, 0);  // Color Rojo
+  pixels.show();
+  delay(1000);
+  
+  // Apagar todos los LEDs
+  pixels.clear();
+  pixels.show();
+	while (1) {}
+  }
+  
+  Strobe(173, 216, 230, 3, 200, 500);
+  
+  setAll(173, 216, 230);  // Color celeste
+  pixels.show();
+  delay(1000);
+  
+  // Apagar todos los LEDs
+  pixels.clear();
+  pixels.show();
+
+}
+
+void loop(){
+ if (Serial2.available() > 0) {
+    char dato = Serial2.read();
+    if (dato == 'T') {
+      pixels.setBrightness(255);
+      colorWipe(173, 255, 0, 47); //Verde
+      delay(1000);
+      pixels.clear();
+
+      temp = sense.readTemperature();
+      Serial.print("Temperatura: ");
+      Serial.print(temp);
+      Serial.println(" °C");
+
+      char tempStr[8];
+      dtostrf(temp, 4, 2, tempStr);
+      Serial2.print(tempStr);
+
+      if (temp >= -39.99 && temp <= 27.00) {
+    // Temperatura Fría: Tres parpadeos celestes con strobe
+        Strobe(255, 255, 255, 3, 100, 300);
+        pixels.clear();
+
+  }   else if (temp >= 27.01 && temp <= 29.00) {
+    // Temperatura Ideal: Tres parpadeos amarillos con strobe
+        Strobe(255, 255, 0, 3, 100, 300);
+        pixels.clear();
+
+  }   else if (temp >= 29.01 && temp <= 84.00) {
+    // Temperatura Caliente: Tres parpadeos naranjas con strobe
+        Strobe(159, 47, 0, 3, 100, 300);
+        pixels.clear();
+
+  }   else if (temp == -40.00) {
+    // Extremo frío
+        Strobe(255, 255, 255, 3, 100, 10);
+        Strobe(255, 0, 0, 3, 100, 300);
+        pixels.clear();
+
+  }   else if (temp == 85.00) {
+    // Extremo calor
+        Strobe(159, 47, 0, 3, 100, 10);
+        Strobe(255, 0, 0, 3, 100, 300);
+        pixels.clear();
+  }
+}
+
+    if (dato == 'D') {
+      colorWipeReverse(224, 85, 49, 50); // Rojo
+  }
+}
+}
+
+void Strobe(byte red, byte green, byte blue, int StrobeCount, int FlashDelay, int EndPause){
+  for(int j = 0; j < StrobeCount; j++) {
+    setAll(red, green, blue);
+    pixels.show();
+    delay(FlashDelay);
+    setAll(0, 0, 0);
+    pixels.show();
+    delay(FlashDelay);
+  }
+  delay(EndPause);
+}
+
+void colorWipe(byte red, byte green, byte blue, int SpeedDelay) {
+  for(uint16_t i = 0; i < NUMPIXELS; i++) {
+    setPixel(i, red, green, blue);
+    pixels.show();
+    delay(SpeedDelay);
+  }
+}
+
+void colorWipeReverse(byte red, byte green, byte blue, int SpeedDelay) {
+  for(int i = NUMPIXELS - 1; i >= 0; i--) {
+    setPixel(i, red, green, blue);
+    pixels.show();
+    delay(SpeedDelay);
+    pixels.clear();
+  }
+}
+
+void setPixel(int Pixel, byte red, byte green, byte blue) {
+  pixels.setPixelColor(Pixel, pixels.Color(red, green, blue));
+}
+
+void setAll(byte red, byte green, byte blue) {
+  for(int i = 0; i < NUMPIXELS; i++) {
+    setPixel(i, red, green, blue); 
+  }
+  pixels.show();
+}
